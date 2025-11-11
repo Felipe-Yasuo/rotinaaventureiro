@@ -12,7 +12,6 @@ export class CompleteRoutineService {
         });
 
         if (!routine) throw new Error("Rotina não encontrada.");
-
         if (routine.completed) throw new Error("Rotina já concluída.");
 
 
@@ -22,14 +21,36 @@ export class CompleteRoutineService {
         });
 
 
-        const user = await prisma.user.update({
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) throw new Error("Usuário não encontrado.");
+
+
+        let newXp = user.xp + routine.xpReward;
+        let newMoney = user.money + routine.moneyReward;
+        let newLevel = user.level;
+
+
+        let xpNeeded = newLevel * 100;
+
+        while (newXp >= xpNeeded) {
+            newXp -= xpNeeded;
+            newLevel++;
+            newMoney += 50;
+            xpNeeded = newLevel * 100;
+        }
+
+        const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: {
-                xp: { increment: routine.xpReward },
-                money: { increment: routine.moneyReward },
+                xp: newXp,
+                money: newMoney,
+                level: newLevel,
             },
         });
 
-        return { message: "Rotina concluída com sucesso!", user };
+        return {
+            message: `Rotina concluída! ${newLevel > user.level ? "Level Up! 🔥" : ""}`,
+            user: updatedUser,
+        };
     }
 }
