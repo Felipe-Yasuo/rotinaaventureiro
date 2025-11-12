@@ -53,5 +53,9 @@ router.post("/shop/buy", isAuthenticated, (req, res) => buyItem.handle(req, res)
 // ======= INVENTORY =======
 router.get("/inventory", isAuthenticated, (req, res) => listInventory.handle(req, res));
 
+// ======= HEALTH CHECK / TEST =======
+router.get("/ping", (req, res) => {
+    return res.json({ message: "pong" });
+});
 
 export { router };
